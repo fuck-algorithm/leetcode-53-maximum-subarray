@@ -2,6 +2,10 @@
 
 一个交互式的可视化应用，帮助你理解 LeetCode 53 题的最大子数组和算法（Kadane's Algorithm）。
 
+## 🎉 在线演示
+
+👉 [点击查看在线演示](https://fuck-algorithm.github.io/leetcode-53-maximum-subarray/)
+
 ## 📚 算法简介
 
 **Kadane 算法**是一个经典的动态规划算法，用于在 O(n) 时间复杂度内找到一个数组中具有最大和的连续子数组。

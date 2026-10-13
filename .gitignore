@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# 局域网访问入口（内网地址不入库）
+server-url.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
