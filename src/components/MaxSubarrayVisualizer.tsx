@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import * as d3 from 'd3'
-import { Play, Pause, RotateCcw, SkipBack, SkipForward, Plus, Minus } from 'lucide-react'
+import { Play, Pause, RotateCcw, SkipBack, SkipForward, Plus, Minus, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import type { AlgorithmStep } from '../types'
 import { generateSteps } from '../core/kadane'
 import { useAnimationController } from '../hooks/useAnimationController'
@@ -30,6 +30,7 @@ const MaxSubarrayVisualizer = () => {
   const [nums, setNums] = useState<number[]>(EXAMPLES[0].array)
   const [customInput, setCustomInput] = useState('')
   const [activeExample, setActiveExample] = useState(0)
+  const [isCodeOpen, setIsCodeOpen] = useState(true)
   const svgRef = useRef<SVGSVGElement>(null)
 
   // 细粒度步骤生成
@@ -221,22 +222,15 @@ const MaxSubarrayVisualizer = () => {
   }, [nums, steps, currentStep])
 
   return (
-    <div className="visualizer-container">
-      {/* 顶部控制区 */}
+    <div className={`visualizer-container ${isCodeOpen ? 'code-open' : 'code-closed'}`}>
       <section className="trace-toolbar" aria-label="输入数组">
-        <div className="trace-toolbar-top">
-          <div>
-            <p className="trace-kicker">ALGORITHM TRACE / KADANE</p>
-            <h2>沿着数组，追踪当前最优区间</h2>
-          </div>
-          <div className="complexity-pair" aria-label="算法复杂度">
-            <span><b>O(n)</b><small>时间</small></span>
-            <span><b>O(1)</b><small>空间</small></span>
-          </div>
+        <div className="toolbar-identity">
+          <span className="trace-kicker">LEETCODE 53 <i>/</i> KADANE</span>
+          <strong>最大子数组和</strong>
+          <span className="complexity-inline">O(n) 时间 <b>·</b> O(1) 空间</span>
         </div>
-        <div className="top-control-area">
-          <div className="input-section">
-            <div className="example-buttons">
+        <div className="input-section">
+          <div className="example-buttons">
             {EXAMPLES.map((example, index) => (
               <button
                 key={index}
@@ -253,143 +247,91 @@ const MaxSubarrayVisualizer = () => {
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCustomInput()}
-              placeholder="自定义数组，例如：-2,1,-3,4,-1,2,1,-5,4"
+              placeholder="输入数组，例如 -2, 1, -3, 4"
               className="custom-input-field"
+              aria-label="自定义整数数组"
             />
-            <button onClick={handleCustomInput} className="apply-btn">
-              应用
-            </button>
+            <button onClick={handleCustomInput} className="apply-btn">应用</button>
           </div>
         </div>
-      </div>
       </section>
 
-      {/* 主体：可视化 + 代码联动 双栏 */}
-      <div className="main-layout">
+      <main className="workspace">
         <section className="visualization-area" aria-label="数组可视化">
           <div className="panel-heading">
-            <div>
+            <div className="panel-title">
               <span className="panel-kicker">ARRAY TRACE</span>
-              <h3>数组状态</h3>
+              <h2>连续子数组</h2>
             </div>
             <div className="chart-summary">
               <span><small>当前和</small><b>{currentStep?.variables.currentSum ?? '—'}</b></span>
               <span><small>最大和</small><b className="summary-best">{currentStep?.variables.maxSum ?? '—'}</b></span>
               <span><small>最佳区间</small><b className="summary-range">{currentStep && currentStep.phase !== 'init' ? `[${currentStep.bestStart}, ${currentStep.bestEnd}]` : '—'}</b></span>
             </div>
+            <button
+              className="code-toggle"
+              onClick={() => setIsCodeOpen((open) => !open)}
+              aria-expanded={isCodeOpen}
+              aria-label={isCodeOpen ? '收起代码面板' : '展开代码面板'}
+              title={isCodeOpen ? '收起代码' : '展开代码'}
+            >
+              {isCodeOpen ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}
+              <span>{isCodeOpen ? '收起代码' : '显示代码'}</span>
+            </button>
           </div>
           <svg ref={svgRef} className="visualization-svg" role="img" aria-label="输入数组的正负柱状图"></svg>
           <div className="chart-legend" aria-label="图表图例">
-            <span><i className="legend-swatch swatch-current" />当前元素</span>
-            <span><i className="legend-swatch swatch-active" />当前子数组背景</span>
-            <span><i className="legend-swatch swatch-best" />最佳子数组</span>
+            <span><i className="legend-swatch swatch-positive" />正数</span>
             <span><i className="legend-swatch swatch-negative" />负数</span>
+            <span><i className="legend-swatch swatch-current" />当前元素</span>
+            <span><i className="legend-swatch swatch-active" />当前子数组</span>
+            <span><i className="legend-swatch swatch-best" />最佳子数组</span>
           </div>
         </section>
-        <div className="code-panel-area">
-          <CodePanel
-            currentStep={currentStep}
-            currentStepIndex={currentStepIndex}
-            totalSteps={steps.length}
-          />
-        </div>
-      </div>
+        <aside className={`code-drawer ${isCodeOpen ? 'open' : ''}`} aria-label="代码执行面板" aria-hidden={!isCodeOpen}>
+          {isCodeOpen && (
+            <>
+            <button className="drawer-close" onClick={() => setIsCodeOpen(false)} aria-label="收起代码面板">收起代码</button>
+            <CodePanel
+              currentStep={currentStep}
+              currentStepIndex={currentStepIndex}
+              totalSteps={steps.length}
+            />
+            </>
+          )}
+        </aside>
+      </main>
 
-      {/* 步骤说明 + 控制面板 */}
-      <div className="bottom-control-area">
+      <footer className="bottom-control-area">
         <div className="step-explanation-inline" aria-live="polite">
-          <span className="step-caption">CURRENT OPERATION</span>
           <span className="step-number">
             {String(Math.max(currentStepIndex + 1, 0)).padStart(2, '0')} <i>/</i> {String(steps.length).padStart(2, '0')}
           </span>
           <span className="step-phase">{currentStep ? currentStep.phase : 'READY'}</span>
           <span className="step-description">
-            {currentStep ? currentStep.description : '点击 ▶ 或 → 开始逐步演示 Kadane 算法'}
+            {currentStep ? currentStep.description : '点击播放或逐步前进，查看 Kadane 算法如何找到最大子数组'}
           </span>
         </div>
-
         <div className="control-panel-inline">
           <div className="playback-controls" aria-label="动画控制">
-            <button onClick={reset} className="control-btn-sm" title="重置" aria-label="重置动画">
-              <RotateCcw size={16} />
-            </button>
-            <button
-              onClick={stepBackward}
-              disabled={!canStepBackward}
-              className="control-btn-sm"
-              title="上一步"
-              aria-label="上一步"
-            >
-              <SkipBack size={16} />
-            </button>
-            <button
-              onClick={handlePlayPause}
-              disabled={!canStepForward && !isPlaying}
-              className="control-btn-sm primary"
-              title="播放/暂停"
-              aria-label={isPlaying ? '暂停动画' : '播放动画'}
-            >
+            <button onClick={reset} className="control-btn-sm" title="重置" aria-label="重置动画"><RotateCcw size={16} /></button>
+            <button onClick={stepBackward} disabled={!canStepBackward} className="control-btn-sm" title="上一步" aria-label="上一步"><SkipBack size={16} /></button>
+            <button onClick={handlePlayPause} disabled={!canStepForward && !isPlaying} className="control-btn-sm primary" title="播放/暂停" aria-label={isPlaying ? '暂停动画' : '播放动画'}>
               {isPlaying ? <Pause size={16} /> : <Play size={16} />}
             </button>
-            <button
-              onClick={stepForward}
-              disabled={!canStepForward}
-              className="control-btn-sm"
-              title="下一步"
-              aria-label="下一步"
-            >
-              <SkipForward size={16} />
-            </button>
+            <button onClick={stepForward} disabled={!canStepForward} className="control-btn-sm" title="下一步" aria-label="下一步"><SkipForward size={16} /></button>
           </div>
-
           <div className="speed-control">
-            <button
-              onClick={() => handleSpeedStep(false)}
-              disabled={speed <= 0.5}
-              className="speed-btn-sm"
-              title="减速"
-            >
-              <Minus size={14} />
-            </button>
+            <button onClick={() => handleSpeedStep(false)} disabled={speed <= 0.5} className="speed-btn-sm" title="减速"><Minus size={14} /></button>
             <span className="speed-display">{speed.toFixed(1)}x</span>
-            <button
-              onClick={() => handleSpeedStep(true)}
-              disabled={speed >= 3}
-              className="speed-btn-sm"
-              title="加速"
-            >
-              <Plus size={14} />
-            </button>
+            <button onClick={() => handleSpeedStep(true)} disabled={speed >= 3} className="speed-btn-sm" title="加速"><Plus size={14} /></button>
           </div>
-
-          <div className="legend-inline">
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#e08a24' }}></div>
-              <span>当前元素</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#356ae6' }}></div>
-              <span>当前子数组</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#168467' }}></div>
-              <span>最佳子数组</span>
-            </div>
+          <div className="progress-readout">{currentStepIndex + 1}<span>/</span>{steps.length}</div>
+          <div className="progress-bar">
+            <input type="range" min="0" max={Math.max(0, steps.length - 1)} value={currentStepIndex} onChange={(e) => goToStep(parseInt(e.target.value))} className="progress-slider" aria-label="动画进度" />
           </div>
         </div>
-
-        {/* 进度条 */}
-        <div className="progress-bar">
-          <input
-            type="range"
-            min="0"
-            max={Math.max(0, steps.length - 1)}
-            value={currentStepIndex}
-            onChange={(e) => goToStep(parseInt(e.target.value))}
-            className="progress-slider"
-          />
-        </div>
-      </div>
+      </footer>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 .code-panel {
   width: 100%;
   min-width: 0;
-  min-height: 360px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -187,8 +187,9 @@
 .variables-empty { padding: 7px 0; color: #8190a6; font-family: 'Manrope', sans-serif; font-size: 0.69rem; }
 
 @media (max-width: 640px) {
-  .code-panel { min-height: 390px; }
-  .code-panel-header { padding-inline: 10px; }
+  .code-panel { min-height: 0; height: 100%; }
+  .code-panel-header { padding-inline: 10px; min-height: 48px; }
+  .code-lines { min-height: 0; flex: 1 1 0; }
   .lang-tabs .lang-tab { min-width: 33px; padding-inline: 6px; }
   .code-line { font-size: 0.66rem; }
   .variables-panel { padding-inline: 10px; }
