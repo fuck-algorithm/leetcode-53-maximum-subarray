@@ -1,0 +1,210 @@
+.code-panel {
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 100%;
+  min-height: 320px;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.code-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+.code-panel-title {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.lang-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.lang-tab {
+  background: transparent;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-tab:hover {
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+.lang-tab.active {
+  background: #fbbf24;
+  border-color: #fbbf24;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.code-lines {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+  background: #0f172a;
+}
+
+.code-line {
+  display: flex;
+  padding: 1px 14px;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  transition: background 0.15s ease;
+}
+
+.line-number {
+  min-width: 30px;
+  color: #64748b;
+  user-select: none;
+  text-align: right;
+  margin-right: 12px;
+  font-size: 0.7rem;
+  padding-top: 1px;
+}
+
+.line-content {
+  color: #cbd5e1;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* 高亮当前执行的代码行 */
+.code-line.highlighted {
+  background: rgba(251, 191, 36, 0.14);
+  border-left: 3px solid #fbbf24;
+}
+
+.code-line.highlighted .line-content {
+  color: #fde68a;
+  font-weight: 500;
+}
+
+.code-line.highlighted .line-number {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+/* 语法高亮 token */
+.tok-kw {
+  color: #c084fc;
+}
+.tok-num {
+  color: #60a5fa;
+}
+.tok-str {
+  color: #86efac;
+}
+.tok-comment {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* 变量面板 */
+.variables-panel {
+  border-top: 1px solid #334155;
+  background: #1e293b;
+  padding: 10px 14px;
+}
+
+.variables-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.variables-title {
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbbf24;
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.step-count {
+  color: rgba(15, 23, 42, 0.6);
+  font-weight: 600;
+}
+
+.variables-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variable-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.variable-row.updated {
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.var-name {
+  color: #93c5fd;
+  min-width: 95px;
+}
+
+.var-eq {
+  color: #64748b;
+}
+
+.var-value {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.var-flag {
+  margin-left: auto;
+  color: #86efac;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.variables-empty {
+  color: #64748b;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* 滚动条 */
+.code-lines::-webkit-scrollbar {
+  width: 6px;
+}
+.code-lines::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}

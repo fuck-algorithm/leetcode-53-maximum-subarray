@@ -748,3 +748,33 @@
     font-size: 0.9rem;
   }
 }
+
+/* ===== 主体双栏布局：可视化 + 代码联动 ===== */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14px;
+  min-height: 0;
+  flex: 1;
+}
+
+.code-panel-area {
+  min-height: 320px;
+  display: flex;
+}
+
+/* 按钮禁用态 */
+.control-btn-sm:disabled,
+.speed-btn-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 窄屏堆叠为单列 */
+@media (max-width: 900px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
