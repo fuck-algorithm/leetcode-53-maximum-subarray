@@ -2,8 +2,7 @@ import type { AlgorithmStep, CodePhase, Language } from '../types'
 
 /**
  * 各语言的核心实现代码。
- * 约定：7 个「逻辑行」对应 7 个阶段，但实际显示时保留完整的函数体。
- * highlightLines 用的是真实代码行号（1 起始）。
+ * 约定：阶段高亮行号对应代码中的真实行号（从 1 开始）。
  */
 
 // JavaScript —— 用数组下标版，方便与可视化下标对应
@@ -90,10 +89,6 @@ export const CODE_BY_LANGUAGE: Record<Language, string> = {
   cpp: KADANE_CODE_CPP,
 }
 
-/**
- * 各阶段在各语言代码中的高亮行号。
- * 同一 phase 可能高亮多行（例如 reset 阶段同时高亮 reset 与 start 两行）。
- */
 const PHASE_LINES: Record<CodePhase, Record<Language, number[]>> = {
   init: { javascript: [1, 2, 3], python: [1, 2, 3], java: [3, 4], cpp: [3, 4] },
   read: { javascript: [4], python: [4], java: [6], cpp: [6] },
@@ -104,10 +99,6 @@ const PHASE_LINES: Record<CodePhase, Record<Language, number[]>> = {
   return: { javascript: [12], python: [12], java: [14], cpp: [14] },
 }
 
-/**
- * 生成 Kadane 算法的所有动画步骤 —— 细粒度，每一步对应一行代码。
- * @param nums 输入数组
- */
 export function generateSteps(nums: number[]): AlgorithmStep[] {
   const steps: AlgorithmStep[] = []
   if (nums.length === 0) return steps
@@ -138,19 +129,12 @@ export function generateSteps(nums: number[]): AlgorithmStep[] {
     })
   }
 
-  // 1. 初始化
-  currentSum = 0
-  maxSum = nums[0]
   push(-1, 'init', '初始化：currentSum = 0，maxSum = nums[0] = ' + nums[0])
 
-  // 2. 遍历
   for (let i = 0; i < nums.length; i++) {
     const num = nums[i]
-
-    // read: 读取当前元素
     push(i, 'read', `位置 ${i}：读取元素 nums[${i}] = ${num}`)
 
-    // reset-check + reset: 若累积为负，抛弃它
     if (currentSum < 0) {
       push(i, 'reset-check', `位置 ${i}：currentSum = ${currentSum} < 0，累积是负担，决定抛弃`)
       currentSum = 0
@@ -160,11 +144,9 @@ export function generateSteps(nums: number[]): AlgorithmStep[] {
       push(i, 'reset-check', `位置 ${i}：currentSum = ${currentSum} ≥ 0，继续累积`)
     }
 
-    // accumulate: 加入当前元素
     currentSum += num
     push(i, 'accumulate', `位置 ${i}：currentSum = ${currentSum - num} + ${num} = ${currentSum}`)
 
-    // max-update: 刷新最大和
     if (currentSum > maxSum) {
       maxSum = currentSum
       bestStart = currentStart
@@ -175,45 +157,74 @@ export function generateSteps(nums: number[]): AlgorithmStep[] {
     }
   }
 
-  // 3. 返回
   push(nums.length, 'return', `✅ 完成！最大子数组和为 ${maxSum}，子数组为 [${nums.slice(bestStart, bestEnd + 1).join(', ')}]`)
-
   return steps
 }
 
-/**
- * 极简语法高亮 —— 把关键字/数字/注释/字符串着色。
- * 参照 121 样例的 syntaxHighlight.ts。
- */
-const KEYWORDS =
-  /\b(function|let|const|if|else|for|return|class|public|int|void|new|this|def|in|range|vector|using|namespace)\b/g
+const KEYWORD_SET = new Set([
+  'function', 'let', 'const', 'var', 'if', 'else', 'for', 'return', 'class',
+  'public', 'private', 'int', 'void', 'new', 'this', 'def', 'in', 'range',
+  'vector', 'using', 'namespace', 'static', 'final', 'Solution',
+])
 
+/** Tokenize source text first, then escape and wrap tokens; generated markup is never re-parsed. */
 export function highlightCode(code: string): string {
-  let html = ''
-  // 逐行处理，便于保留结构
-  const lines = code.split('\n')
-  for (const line of lines) {
-    // 注释
-    const commentMatch = line.match(/(\/\/.*$|#.*$)/)
-    const codePart = commentMatch ? line.slice(0, commentMatch.index) : line
-    const commentPart = commentMatch ? commentMatch[1] : ''
-
-    let escaped = escapeHtml(codePart)
-    // 关键字
-    escaped = escaped.replace(KEYWORDS, '<span class="tok-kw">$1</span>')
-    // 数字
-    escaped = escaped.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>')
-    // 字符串
-    escaped = escaped.replace(/'([^']*)'/g, "<span class='tok-str'>'$1'</span>")
-    escaped = escaped.replace(/"([^"]*)"/g, '<span class="tok-str">"$1"</span>')
-
-    html += codePart === '' && commentPart
-      ? `<span class="tok-comment">${escapeHtml(commentPart)}</span>\n`
-      : `${escaped}${commentPart ? `<span class="tok-comment">${escapeHtml(commentPart)}</span>` : ''}\n`
-  }
-  return html
+  return code.split('\n').map(highlightLine).join('\n')
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+function highlightLine(line: string): string {
+  let result = ''
+  let index = 0
+  while (index < line.length) {
+    const char = line[index]
+    const next = line[index + 1]
+
+    if ((char === '/' && next === '/') || char === '#') {
+      result += `<span class="tok-comment">${escapeHtml(line.slice(index))}</span>`
+      break
+    }
+
+    if (char === '"' || char === "'") {
+      const quote = char
+      let end = index + 1
+      while (end < line.length) {
+        if (line[end] === '\\\\') {
+          end += 2
+          continue
+        }
+        if (line[end] === quote) {
+          end += 1
+          break
+        }
+        end += 1
+      }
+      result += `<span class="tok-str">${escapeHtml(line.slice(index, end))}</span>`
+      index = end
+      continue
+    }
+
+    if (/[A-Za-z_$]/.test(char) || /\d/.test(char)) {
+      let end = index + 1
+      while (end < line.length && /[A-Za-z0-9_$]/.test(line[end])) end += 1
+      const token = line.slice(index, end)
+      const escaped = escapeHtml(token)
+      if (KEYWORD_SET.has(token)) {
+        result += `<span class="tok-kw">${escaped}</span>`
+      } else if (/^\d+(?:\.\d+)?$/.test(token)) {
+        result += `<span class="tok-num">${escaped}</span>`
+      } else {
+        result += escaped
+      }
+      index = end
+      continue
+    }
+
+    result += escapeHtml(char)
+    index += 1
+  }
+  return result
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }

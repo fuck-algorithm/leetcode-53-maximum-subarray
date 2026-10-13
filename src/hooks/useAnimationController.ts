@@ -26,13 +26,13 @@ export function useAnimationController(
   steps: AlgorithmStep[],
   onStepChange?: (step: AlgorithmStep | null, index: number) => void,
 ): UseAnimationControllerReturn {
-  const [currentStepIndex, setCurrentStepIndex] = useState(-1)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [speed, setSpeedState] = useState(1)
   const intervalRef = useRef<number | null>(null)
 
   const canStepForward = currentStepIndex < steps.length - 1
-  const canStepBackward = currentStepIndex > -1
+  const canStepBackward = currentStepIndex > 0
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -79,9 +79,9 @@ export function useAnimationController(
   const reset = useCallback(() => {
     setIsPlaying(false)
     clearTimer()
-    setCurrentStepIndex(-1)
-    onStepChange?.(null, -1)
-  }, [clearTimer, onStepChange])
+    setCurrentStepIndex(0)
+    onStepChange?.(steps[0] ?? null, 0)
+  }, [clearTimer, onStepChange, steps])
 
   const setSpeed = useCallback((newSpeed: number) => {
     setSpeedState(Math.max(0.5, Math.min(3, newSpeed)))

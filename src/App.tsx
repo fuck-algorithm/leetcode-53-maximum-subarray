@@ -15,8 +15,14 @@ function App() {
       <header className="header">
         <div className="header-content">
           <div className="header-title">
-            <h1>🎯 最大子数组和算法</h1>
-            <p className="subtitle">LeetCode 53 - Kadane's Algorithm</p>
+            <div className="brand-lockup">
+              <span className="brand-mark" aria-hidden="true"><span className="brand-dot" /></span>
+              <div>
+                <p className="eyebrow">LEETCODE 53 · TRACE LAB</p>
+                <h1>最大子数组和</h1>
+              </div>
+            </div>
+            <p className="subtitle">Kadane's Algorithm · 连续区间的最优解</p>
           </div>
           
           <nav className="navigation">

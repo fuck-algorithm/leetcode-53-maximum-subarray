@@ -27,6 +27,7 @@ const CodePanel = ({ currentStep, currentStepIndex, totalSteps }: CodePanelProps
   const code = CODE_BY_LANGUAGE[language]
   const codeLines = code.split('\n')
   const highlightLines = currentStep?.highlightLines[language] || []
+  const renderedLines = codeLines.map((line, idx) => ({ line, idx, html: highlightCode(line) }))
 
   // 变量面板：始终显示 3 个核心变量 + 子数组范围
   const variables = currentStep
@@ -66,7 +67,7 @@ const CodePanel = ({ currentStep, currentStepIndex, totalSteps }: CodePanelProps
       </div>
 
       <div className="code-lines">
-        {codeLines.map((line, idx) => {
+        {renderedLines.map(({ idx, html }) => {
           const lineNum = idx + 1
           const isHighlighted = highlightLines.includes(lineNum)
           return (
@@ -77,7 +78,7 @@ const CodePanel = ({ currentStep, currentStepIndex, totalSteps }: CodePanelProps
               <span className="line-number">{lineNum}</span>
               <span
                 className="line-content"
-                dangerouslySetInnerHTML={{ __html: highlightCode(line) }}
+                dangerouslySetInnerHTML={{ __html: html }}
               />
             </div>
           )

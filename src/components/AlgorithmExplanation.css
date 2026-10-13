@@ -1,493 +1,152 @@
 .explanation-page {
-  height: 100%;
-  overflow-y: auto;
-  background: #f8fafc;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  background: var(--canvas);
 }
 
 .explanation-container {
-  max-width: 1400px;
+  width: min(1080px, 100%);
   margin: 0 auto;
-  padding: 40px;
+  padding: 34px 28px 56px;
 }
 
 .explanation-section {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.explanation-section:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-.highlight-section {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 2px solid #fbbf24;
+  margin: 0 0 16px;
+  padding: 23px 25px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 1.8rem;
-  color: #92400e;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin: 0 0 15px;
+  color: var(--ink);
+  font-size: 1.16rem;
   font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .section-icon {
-  font-size: 2rem;
+  width: 25px;
+  height: 25px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 5px;
+  background: #e7eefc;
+  font-size: 0.9rem;
 }
 
 .section-content {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: #334155;
+  color: #475467;
+  font-size: 0.92rem;
+  line-height: 1.75;
 }
 
-.intro-text {
-  font-size: 1.15rem;
-  margin-bottom: 20px;
+.section-content p { margin: 0 0 12px; }
+.section-content strong { color: var(--ink); }
+.intro-text { font-size: 1rem; }
+
+.explanation-page code {
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: #f0f3f7;
+  color: #264d9d;
+  font-family: var(--mono);
+  font-size: 0.88em;
 }
 
-/* 示例框 */
-.example-box {
-  background: #fffbeb;
-  border: 2px solid #fde68a;
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 20px;
-}
-
-.example-title {
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 12px;
-  font-size: 1.1rem;
-}
-
-.example-content {
-  font-size: 1.05rem;
-  line-height: 1.8;
-}
-
-.example-content code {
-  background: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-family: 'Courier New', monospace;
-  color: #92400e;
-  font-weight: 600;
-}
-
-.example-answer {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #fde68a;
-  font-size: 1.1rem;
-}
-
-/* 生活例子 */
-.life-example {
-  background: white;
-  border: 2px solid #fef3c7;
-  border-radius: 12px;
-  padding: 24px;
-  margin-top: 20px;
-}
-
-.day-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 0;
-  font-size: 1.05rem;
-}
-
-.day-badge {
-  background: #f59e0b;
-  color: white;
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  min-width: 80px;
-  text-align: center;
-}
-
-.day-action {
-  font-weight: 600;
-  min-width: 60px;
-}
-
-.day-result {
-  flex: 1;
-}
-
-.critical-moment {
-  margin-top: 24px;
-  background: #fef3c7;
-  border: 2px solid #fbbf24;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.moment-title {
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 16px;
-}
-
-.moment-content p {
-  margin-bottom: 16px;
-  font-size: 1.05rem;
-}
-
-.negative {
-  color: #dc2626;
-}
-
-.choice-box {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-}
-
-.choice {
-  flex: 1;
-  padding: 16px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.choice.bad {
-  background: #fee2e2;
-  border: 2px solid #ef4444;
-}
-
-.choice.good {
-  background: #d1fae5;
-  border: 2px solid #10b981;
-}
-
-.choice-label {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-
-.choice-calc {
-  font-size: 1.15rem;
-  margin: 8px 0;
-}
-
-.choice-desc {
-  font-size: 0.95rem;
-  opacity: 0.8;
-}
-
-.vs {
-  display: flex;
-  align-items: center;
-  font-weight: 700;
-  color: #f59e0b;
-  font-size: 1.2rem;
-}
-
-/* 决策网格 */
-.decision-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin: 24px 0;
-}
-
-.decision-card {
-  padding: 24px;
-  border-radius: 12px;
-  border: 3px solid;
-}
-
-.decision-card.positive-card {
-  background: #d1fae5;
-  border-color: #10b981;
-}
-
-.decision-card.negative-card {
-  background: #fee2e2;
-  border-color: #ef4444;
-}
-
-.decision-condition {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.decision-action {
-  font-size: 1.15rem;
-  margin-bottom: 8px;
-}
-
-.decision-reason {
-  font-size: 1rem;
-  opacity: 0.8;
-}
-
-.why-works {
-  background: #fef3c7;
-  border: 3px solid #fbbf24;
-  border-radius: 12px;
-  padding: 24px;
-  margin-top: 24px;
-}
-
-.why-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 16px;
-}
-
-.why-content p {
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-}
-
-.why-content code {
-  background: rgba(251, 191, 36, 0.15);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-family: 'Courier New', monospace;
-  color: #92400e;
-  font-weight: 600;
-  font-size: 1.05rem;
-}
-
-.math-formula {
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: 1.15rem;
-  text-align: center;
-}
-
-.concrete-example {
-  margin-top: 16px;
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-}
-
-.example-line {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.05rem;
-}
-
-.example-label {
-  font-weight: 700;
-}
-
-.comparison {
-  color: #64748b;
-}
-
-.result {
-  color: #dc2626;
-  font-weight: 600;
-}
-
-/* 复杂度对比 */
-.complexity-comparison {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin: 24px 0;
-}
-
-.complexity-method {
-  flex: 1;
-  padding: 24px;
-  border-radius: 12px;
-  border: 3px solid;
-}
-
-.bad-method {
-  background: #fef2f2;
-  border-color: #fbbf24;
-}
-
-.good-method {
-  background: #f0fdf4;
-  border-color: #fbbf24;
-}
-
-.method-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.method-label {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.method-time {
-  font-size: 1.3rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-}
-
-.method-desc {
-  font-size: 1.05rem;
-  margin-bottom: 16px;
-}
-
-.method-example {
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-}
-
-.method-example div {
-  padding: 6px 0;
-  font-size: 1rem;
-}
-
-.vs-separator {
-  display: flex;
-  align-items: center;
-}
-
-.vs-badge {
-  background: #f59e0b;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1.3rem;
-}
-
-/* 关键要点 */
-.key-takeaway {
-  text-align: center;
-}
-
-.takeaway-main {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #92400e;
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  border: 3px solid #fbbf24;
-  margin-bottom: 16px;
-}
-
-.takeaway-sub {
-  font-size: 1.2rem;
-  color: #78350f;
-}
-
-/* 算法步骤 */
-.steps-container {
-  display: grid;
-  gap: 20px;
-}
-
+.example-box,
+.life-example,
+.why-works,
+.complexity-method,
+.math-formula,
+.concrete-example,
+.method-example,
 .step-item {
-  display: flex;
-  gap: 20px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: #f8fafc;
-  padding: 20px;
-  border-radius: 12px;
-  border-left: 4px solid #f59e0b;
 }
 
-.step-number {
-  background: #f59e0b;
-  color: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
+.example-box { margin-top: 15px; padding: 14px 16px; }
+.example-title { margin-bottom: 6px; color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+.example-content { line-height: 1.9; }
+.example-answer { margin-top: 5px; padding-top: 8px; border-top: 1px solid var(--line); }
 
-.step-content {
-  flex: 1;
-}
+.life-example { margin-top: 14px; padding: 12px 17px; background: #fff; }
+.day-row { display: flex; align-items: center; gap: 13px; padding: 9px 0; border-bottom: 1px solid #edf0f4; font-size: 0.87rem; }
+.day-row:last-of-type { border-bottom: 0; }
+.day-badge { min-width: 62px; padding: 3px 6px; border-radius: 3px; background: #e7eefc; color: #3157a6; font-size: 0.7rem; font-weight: 700; text-align: center; }
+.day-action { min-width: 42px; color: var(--ink); font-family: var(--mono); font-weight: 500; }
+.day-result { flex: 1; }
+.critical-moment { margin-top: 13px; padding: 15px; border-left: 3px solid var(--amber); background: #fff8ed; }
+.moment-title { margin-bottom: 8px; color: #8d5418; font-size: 0.83rem; font-weight: 700; }
+.moment-content p { margin-bottom: 10px; font-size: 0.86rem; }
+.negative { color: var(--red); }
+.choice-box { display: flex; align-items: stretch; gap: 10px; }
+.choice { flex: 1; padding: 11px; border: 1px solid var(--line); border-radius: 5px; background: white; }
+.choice.bad { border-left: 3px solid var(--red); }
+.choice.good { border-left: 3px solid var(--green); }
+.choice-label { margin-bottom: 5px; color: var(--ink); font-size: 0.8rem; font-weight: 700; }
+.choice-calc { margin: 4px 0; font-family: var(--mono); font-size: 0.85rem; }
+.choice-desc { color: var(--muted); font-size: 0.75rem; }
+.vs { display: grid; place-items: center; color: var(--faint); font-family: var(--mono); font-size: 0.7rem; }
 
-.step-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 8px;
-}
+.decision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 13px 0; }
+.decision-card { padding: 15px 16px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.decision-card.positive-card { border-top: 3px solid var(--green); }
+.decision-card.negative-card { border-top: 3px solid var(--red); }
+.decision-condition { margin-bottom: 7px; color: var(--ink); font-size: 0.9rem; font-weight: 700; }
+.decision-action { margin-bottom: 4px; color: var(--ink); font-size: 0.85rem; font-weight: 600; }
+.decision-reason { color: var(--muted); font-size: 0.78rem; }
 
-.step-desc {
-  font-size: 1.05rem;
-  line-height: 1.8;
-}
+.why-works { margin-top: 14px; padding: 15px; background: #f8fafc; }
+.why-title { margin-bottom: 8px; color: var(--ink); font-size: 0.88rem; font-weight: 700; }
+.why-content p { margin-bottom: 8px; }
+.math-formula { padding: 10px; background: white; font-family: var(--mono); font-size: 0.82rem; }
+.concrete-example { margin-top: 9px; padding: 10px; background: white; }
+.example-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.82rem; }
+.example-label { font-weight: 700; }
+.comparison { color: var(--muted); }
+.result { color: var(--red); font-weight: 700; }
 
-.step-desc code {
-  background: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  color: #92400e;
-  font-weight: 600;
-}
+.complexity-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+.complexity-method { padding: 15px; background: #fff; }
+.bad-method { border-left: 3px solid #a7b0bd; }
+.good-method { border-left: 3px solid var(--green); }
+.method-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.method-label { color: var(--ink); font-size: 0.86rem; font-weight: 700; }
+.method-time { color: var(--blue); font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.method-desc { margin-bottom: 8px; color: var(--muted); font-size: 0.78rem; }
+.method-example { padding: 7px 10px; background: #f8fafc; }
+.method-example div { padding: 3px 0; font-size: 0.76rem; }
+.vs-separator { display: none; }
 
-/* 响应式 */
-@media (max-width: 1024px) {
-  .explanation-container {
-    padding: 24px;
-  }
-  
-  .decision-grid,
-  .complexity-comparison {
-    grid-template-columns: 1fr;
-  }
-  
-  .vs-separator {
-    transform: rotate(90deg);
-    margin: 20px 0;
-  }
-}
+.highlight-section { border-left: 3px solid var(--blue); background: #f5f8ff; }
+.key-takeaway { text-align: left; }
+.takeaway-main { margin-bottom: 5px; color: var(--ink); font-size: 1.15rem; font-weight: 700; }
+.takeaway-sub { color: var(--muted); font-size: 0.85rem; }
 
-@media (max-width: 768px) {
-  .explanation-container {
-    padding: 16px;
-  }
-  
-  .explanation-section {
-    padding: 20px;
-  }
-  
-  .section-title {
-    font-size: 1.4rem;
-  }
-  
-  .choice-box {
-    flex-direction: column;
-  }
-  
-  .vs {
-    transform: rotate(90deg);
-    margin: 8px 0;
-  }
+.steps-container { display: grid; gap: 0; }
+.step-item { display: flex; gap: 14px; padding: 13px 0; border: 0; border-bottom: 1px solid #edf0f4; border-radius: 0; background: transparent; }
+.step-item:last-child { border-bottom: 0; }
+.explanation-page .step-number { width: 25px; height: 25px; flex: 0 0 25px; display: grid; place-items: center; border-radius: 50%; background: #e7eefc; color: #3157a6; font-family: var(--mono); font-size: 0.72rem; font-weight: 500; }
+.step-content { flex: 1; }
+.step-title { margin: 1px 0 4px; color: var(--ink); font-size: 0.88rem; font-weight: 700; }
+.step-desc { color: var(--muted); font-size: 0.82rem; line-height: 1.65; }
+
+@media (max-width: 700px) {
+  .explanation-container { padding: 18px 13px 32px; }
+  .explanation-section { padding: 17px 15px; margin-bottom: 11px; }
+  .section-title { font-size: 1rem; }
+  .section-content { font-size: 0.85rem; }
+  .decision-grid, .complexity-comparison { grid-template-columns: 1fr; }
+  .choice-box { flex-direction: column; }
+  .vs { min-height: 12px; }
+  .day-row { flex-wrap: wrap; gap: 7px; }
+  .day-result { flex-basis: 100%; padding-left: 70px; }
 }

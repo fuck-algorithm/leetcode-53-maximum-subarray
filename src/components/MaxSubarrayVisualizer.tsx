@@ -112,7 +112,7 @@ const MaxSubarrayVisualizer = () => {
 
     const width = svgRef.current.clientWidth
     const height = svgRef.current.clientHeight
-    const margin = { top: 48, right: 20, bottom: 60, left: 20 }
+    const margin = { top: 48, right: 20, bottom: 78, left: 20 }
     const chartWidth = width - margin.left - margin.right
     const chartHeight = height - margin.top - margin.bottom
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
@@ -131,24 +131,10 @@ const MaxSubarrayVisualizer = () => {
       .attr('x2', chartWidth)
       .attr('y1', zeroY)
       .attr('y2', zeroY)
-      .attr('stroke', '#e5e7eb')
-      .attr('stroke-width', 2)
+      .attr('stroke', '#cbd5e1')
+      .attr('stroke-width', 1.5)
 
-    // 最佳子数组范围高亮带
-    if (step && step.bestEnd >= 0 && step.bestStart <= step.bestEnd) {
-      const startX = step.bestStart * barWidth
-      const endX = step.bestEnd * barWidth + barWidth
-      g.append('rect')
-        .attr('x', startX)
-        .attr('y', 0)
-        .attr('width', endX - startX)
-        .attr('height', chartHeight)
-        .attr('fill', '#34d399')
-        .attr('opacity', 0.12)
-        .attr('rx', 6)
-    }
-
-    // 当前子数组范围高亮带（在最佳范围之下，半透明蓝）
+    // 当前子数组范围高亮带
     if (step && step.index >= 0 && step.currentStart <= step.index) {
       const startX = step.currentStart * barWidth
       const endX = step.index * barWidth + barWidth
@@ -157,7 +143,7 @@ const MaxSubarrayVisualizer = () => {
         .attr('y', 0)
         .attr('width', endX - startX)
         .attr('height', chartHeight)
-        .attr('fill', '#60a5fa')
+        .attr('fill', '#356ae6')
         .attr('opacity', 0.08)
         .attr('rx', 6)
     }
@@ -168,23 +154,23 @@ const MaxSubarrayVisualizer = () => {
       const barHeight = Math.abs(yScale(value) - zeroY)
       const y = value >= 0 ? yScale(value) : zeroY
 
-      // 状态配色
-      let fillColor = value >= 0 ? '#fbbf24' : '#f87171'
+      // 当前执行位置使用橙色描边，负值使用红色柱并由零线区分方向。
+      let fillColor = value >= 0 ? '#356ae6' : '#c94c55'
       let strokeColor = 'none'
       let strokeWidth = 0
+      const isCurrent = Boolean(step && index === step.index && step.index < nums.length)
+      const isBest = Boolean(step && step.phase !== 'init' && index >= step.bestStart && index <= step.bestEnd)
+      const isActive = Boolean(step && step.index >= 0 && index >= step.currentStart && index <= step.index)
 
-      if (step) {
-        // 当前处理元素
-        if (index === step.index && step.index < nums.length) {
-          strokeColor = '#f59e0b'
-          strokeWidth = 3
-        }
-        // 最佳子数组
-        if (index >= step.bestStart && index <= step.bestEnd) {
-          fillColor = value >= 0 ? '#34d399' : '#fbbf24'
-          strokeColor = '#10b981'
-          strokeWidth = 1.5
-        }
+      if (isActive) {
+        fillColor = '#dce8ff'
+      }
+      if (isBest) {
+        fillColor = '#168467'
+      }
+      if (isCurrent) {
+        strokeColor = '#e08a24'
+        strokeWidth = 3
       }
 
       const bar = g.append('g').attr('class', 'bar-group')
@@ -203,20 +189,20 @@ const MaxSubarrayVisualizer = () => {
       bar
         .append('text')
         .attr('x', x + (barWidth - barSpacing * 2) / 2)
-        .attr('y', y + (value >= 0 ? -5 : barHeight + 15))
+        .attr('y', y + (value >= 0 ? -7 : barHeight + 12))
         .attr('text-anchor', 'middle')
         .attr('font-size', '12px')
         .attr('font-weight', 'bold')
-        .attr('fill', '#374151')
+        .attr('fill', '#172236')
         .text(value)
 
       bar
         .append('text')
         .attr('x', x + (barWidth - barSpacing * 2) / 2)
-        .attr('y', chartHeight + 25)
+        .attr('y', chartHeight + 18)
         .attr('text-anchor', 'middle')
         .attr('font-size', '11px')
-        .attr('fill', '#6b7280')
+        .attr('fill', '#667085')
         .text(`[${index}]`)
     })
 
@@ -224,22 +210,33 @@ const MaxSubarrayVisualizer = () => {
     if (step) {
       const info = g
         .append('text')
-        .attr('x', chartWidth / 2)
-        .attr('y', -12)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '15px')
-        .attr('font-weight', 'bold')
-        .attr('fill', '#1f2937')
-      info.text(`currentSum: ${step.variables.currentSum}  |  maxSum: ${step.variables.maxSum}`)
+        .attr('x', 0)
+        .attr('y', -18)
+        .attr('text-anchor', 'start')
+        .attr('font-size', '12px')
+        .attr('font-weight', '500')
+        .attr('fill', '#172236')
+      info.text(`currentSum = ${step.variables.currentSum}   /   maxSum = ${step.variables.maxSum}`)
     }
   }, [nums, steps, currentStep])
 
   return (
     <div className="visualizer-container">
       {/* 顶部控制区 */}
-      <div className="top-control-area">
-        <div className="input-section">
-          <div className="example-buttons">
+      <section className="trace-toolbar" aria-label="输入数组">
+        <div className="trace-toolbar-top">
+          <div>
+            <p className="trace-kicker">ALGORITHM TRACE / KADANE</p>
+            <h2>沿着数组，追踪当前最优区间</h2>
+          </div>
+          <div className="complexity-pair" aria-label="算法复杂度">
+            <span><b>O(n)</b><small>时间</small></span>
+            <span><b>O(1)</b><small>空间</small></span>
+          </div>
+        </div>
+        <div className="top-control-area">
+          <div className="input-section">
+            <div className="example-buttons">
             {EXAMPLES.map((example, index) => (
               <button
                 key={index}
@@ -265,12 +262,30 @@ const MaxSubarrayVisualizer = () => {
           </div>
         </div>
       </div>
+      </section>
 
       {/* 主体：可视化 + 代码联动 双栏 */}
       <div className="main-layout">
-        <div className="visualization-area">
-          <svg ref={svgRef} className="visualization-svg"></svg>
-        </div>
+        <section className="visualization-area" aria-label="数组可视化">
+          <div className="panel-heading">
+            <div>
+              <span className="panel-kicker">ARRAY TRACE</span>
+              <h3>数组状态</h3>
+            </div>
+            <div className="chart-summary">
+              <span><small>当前和</small><b>{currentStep?.variables.currentSum ?? '—'}</b></span>
+              <span><small>最大和</small><b className="summary-best">{currentStep?.variables.maxSum ?? '—'}</b></span>
+              <span><small>最佳区间</small><b className="summary-range">{currentStep && currentStep.phase !== 'init' ? `[${currentStep.bestStart}, ${currentStep.bestEnd}]` : '—'}</b></span>
+            </div>
+          </div>
+          <svg ref={svgRef} className="visualization-svg" role="img" aria-label="输入数组的正负柱状图"></svg>
+          <div className="chart-legend" aria-label="图表图例">
+            <span><i className="legend-swatch swatch-current" />当前元素</span>
+            <span><i className="legend-swatch swatch-active" />当前子数组背景</span>
+            <span><i className="legend-swatch swatch-best" />最佳子数组</span>
+            <span><i className="legend-swatch swatch-negative" />负数</span>
+          </div>
+        </section>
         <div className="code-panel-area">
           <CodePanel
             currentStep={currentStep}
@@ -282,18 +297,20 @@ const MaxSubarrayVisualizer = () => {
 
       {/* 步骤说明 + 控制面板 */}
       <div className="bottom-control-area">
-        <div className="step-explanation-inline">
+        <div className="step-explanation-inline" aria-live="polite">
+          <span className="step-caption">CURRENT OPERATION</span>
           <span className="step-number">
-            步骤 {currentStepIndex + 1}/{steps.length}
+            {String(Math.max(currentStepIndex + 1, 0)).padStart(2, '0')} <i>/</i> {String(steps.length).padStart(2, '0')}
           </span>
+          <span className="step-phase">{currentStep ? currentStep.phase : 'READY'}</span>
           <span className="step-description">
             {currentStep ? currentStep.description : '点击 ▶ 或 → 开始逐步演示 Kadane 算法'}
           </span>
         </div>
 
         <div className="control-panel-inline">
-          <div className="playback-controls">
-            <button onClick={reset} className="control-btn-sm" title="重置">
+          <div className="playback-controls" aria-label="动画控制">
+            <button onClick={reset} className="control-btn-sm" title="重置" aria-label="重置动画">
               <RotateCcw size={16} />
             </button>
             <button
@@ -301,6 +318,7 @@ const MaxSubarrayVisualizer = () => {
               disabled={!canStepBackward}
               className="control-btn-sm"
               title="上一步"
+              aria-label="上一步"
             >
               <SkipBack size={16} />
             </button>
@@ -309,6 +327,7 @@ const MaxSubarrayVisualizer = () => {
               disabled={!canStepForward && !isPlaying}
               className="control-btn-sm primary"
               title="播放/暂停"
+              aria-label={isPlaying ? '暂停动画' : '播放动画'}
             >
               {isPlaying ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -317,6 +336,7 @@ const MaxSubarrayVisualizer = () => {
               disabled={!canStepForward}
               className="control-btn-sm"
               title="下一步"
+              aria-label="下一步"
             >
               <SkipForward size={16} />
             </button>
@@ -344,15 +364,15 @@ const MaxSubarrayVisualizer = () => {
 
           <div className="legend-inline">
             <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#f59e0b' }}></div>
+              <div className="legend-color" style={{ backgroundColor: '#e08a24' }}></div>
               <span>当前元素</span>
             </div>
             <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#60a5fa' }}></div>
+              <div className="legend-color" style={{ backgroundColor: '#356ae6' }}></div>
               <span>当前子数组</span>
             </div>
             <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#34d399' }}></div>
+              <div className="legend-color" style={{ backgroundColor: '#168467' }}></div>
               <span>最佳子数组</span>
             </div>
           </div>
