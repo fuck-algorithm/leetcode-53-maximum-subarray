@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import * as d3 from 'd3'
-import { Play, Pause, RotateCcw, SkipBack, SkipForward, Plus, Minus, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { Play, Pause, RotateCcw, SkipBack, SkipForward, Plus, Minus, PanelRightOpen } from 'lucide-react'
 import type { AlgorithmStep } from '../types'
 import { generateSteps } from '../core/kadane'
 import { useAnimationController } from '../hooks/useAnimationController'
@@ -30,7 +30,8 @@ const MaxSubarrayVisualizer = () => {
   const [nums, setNums] = useState<number[]>(EXAMPLES[0].array)
   const [customInput, setCustomInput] = useState('')
   const [activeExample, setActiveExample] = useState(0)
-  const [isCodeOpen, setIsCodeOpen] = useState(true)
+  const [isCodeOpen, setIsCodeOpen] = useState(() => !window.matchMedia('(max-width: 720px)').matches)
+  const [chartRevision, setChartRevision] = useState(0)
   const svgRef = useRef<SVGSVGElement>(null)
 
   // 细粒度步骤生成
@@ -57,6 +58,23 @@ const MaxSubarrayVisualizer = () => {
 
   // 当前步骤
   const currentStep = currentStepIndex >= 0 ? steps[currentStepIndex] : null
+  const decision = currentStep?.decision
+  const choiceText = decision?.choice === 'restart'
+    ? '从当前数重新开始'
+    : decision?.choice === 'extend'
+      ? '保留前缀并接上当前数'
+      : currentStep?.phase === 'init'
+        ? '先从第一个数建立初始答案'
+        : '遍历结束'
+  const choiceReason = decision?.choice === 'restart'
+    ? decision.previousSum === null
+      ? '这是第一个元素，还没有前缀可接。'
+      : `前缀和 ${decision.previousSum} 为负，接上只会让结果更小。`
+    : decision?.choice === 'extend'
+      ? `接续得到 ${decision.extendCandidate}，大于单独从当前数开始的 ${decision.restartCandidate}。`
+      : currentStep?.phase === 'init'
+        ? '初始最大值设为数组第一个元素，保证全负数时也有正确答案。'
+        : '最终答案已确定。'
 
   // 切换示例
   const handleExampleChange = (index: number) => {
@@ -104,6 +122,16 @@ const MaxSubarrayVisualizer = () => {
     setSpeed(faster ? Math.min(3, speed + 0.5) : Math.max(0.5, speed - 0.5))
   }
 
+  // Redraw when the workspace changes width (especially when the code drawer opens/closes).
+  useEffect(() => {
+    const svg = svgRef.current
+    const host = svg?.parentElement
+    if (!svg || !host) return
+    const observer = new ResizeObserver(() => setChartRevision((revision) => revision + 1))
+    observer.observe(host)
+    return () => observer.disconnect()
+  }, [])
+
   // D3 柱状图渲染
   useEffect(() => {
     if (!svgRef.current || steps.length === 0) return
@@ -113,7 +141,7 @@ const MaxSubarrayVisualizer = () => {
 
     const width = svgRef.current.clientWidth
     const height = svgRef.current.clientHeight
-    const margin = { top: 48, right: 20, bottom: 78, left: 20 }
+    const margin = { top: 64, right: 24, bottom: 92, left: 24 }
     const chartWidth = width - margin.left - margin.right
     const chartHeight = height - margin.top - margin.bottom
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
@@ -125,6 +153,7 @@ const MaxSubarrayVisualizer = () => {
     const maxAbs = Math.max(...nums.map(Math.abs), 1)
     const yScale = d3.scaleLinear().domain([-maxAbs, maxAbs]).range([chartHeight, 0])
     const zeroY = yScale(0)
+    const xCenter = (index: number) => index * barWidth + barWidth / 2
 
     // X 轴（y=0 处基线）
     g.append('line')
@@ -135,18 +164,57 @@ const MaxSubarrayVisualizer = () => {
       .attr('stroke', '#cbd5e1')
       .attr('stroke-width', 1.5)
 
-    // 当前子数组范围高亮带
-    if (step && step.index >= 0 && step.currentStart <= step.index) {
-      const startX = step.currentStart * barWidth
-      const endX = step.index * barWidth + barWidth
+    // 当前候选区间底色：范围和文字标签双重编码，不只靠颜色表达。
+    if (step && step.decision.candidateStart !== null && step.decision.candidateEnd !== null) {
+      const startX = step.decision.candidateStart * barWidth
+      const endX = (step.decision.candidateEnd + 1) * barWidth
       g.append('rect')
-        .attr('x', startX)
+        .attr('x', startX + 1)
         .attr('y', 0)
-        .attr('width', endX - startX)
+        .attr('width', Math.max(0, endX - startX - 2))
         .attr('height', chartHeight)
         .attr('fill', '#356ae6')
-        .attr('opacity', 0.08)
-        .attr('rx', 6)
+        .attr('opacity', 0.055)
+        .attr('rx', 5)
+    }
+
+    // 当前候选/最佳区间端点括线与标签
+    const drawRange = (start: number | null, end: number | null, y: number, color: string, label: string) => {
+      if (start === null || end === null || end < start) return
+      const left = xCenter(start)
+      const right = xCenter(end)
+      const range = g.append('g').attr('class', 'range-marker')
+      range.append('path')
+        .attr('d', `M${left},${y + 6} v-6 H${right} v6`)
+        .attr('fill', 'none')
+        .attr('stroke', color)
+        .attr('stroke-width', 1.5)
+      range.append('text')
+        .attr('x', (left + right) / 2)
+        .attr('y', y - 5)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '10px')
+        .attr('font-weight', '600')
+        .attr('fill', color)
+        .text(`${label} [${start}…${end}]`)
+    }
+    if (step?.decision.candidateStart !== null && step?.decision.candidateEnd !== null) {
+      drawRange(step?.decision.candidateStart ?? null, step?.decision.candidateEnd ?? null, 15, '#356ae6', '本轮')
+    }
+    if (step && step.phase !== 'init' && step.bestEnd >= 0) {
+      drawRange(step.bestStart, step.bestEnd, chartHeight + 43, '#168467', '最佳区间')
+    }
+
+    // 当前下标的执行游标
+    if (step && step.index >= 0 && step.index < nums.length) {
+      const cursorX = xCenter(step.index)
+      g.append('line')
+        .attr('x1', cursorX).attr('x2', cursorX)
+        .attr('y1', 0).attr('y2', chartHeight)
+        .attr('stroke', '#e08a24').attr('stroke-width', 1).attr('stroke-dasharray', '3 4').attr('opacity', 0.65)
+      g.append('path')
+        .attr('d', `M${cursorX - 4},-3 L${cursorX + 4},-3 L${cursorX},3 Z`)
+        .attr('fill', '#e08a24')
     }
 
     // 柱子
@@ -175,6 +243,7 @@ const MaxSubarrayVisualizer = () => {
       }
 
       const bar = g.append('g').attr('class', 'bar-group')
+      bar.append('title').text(`下标 ${index} · 数值 ${value}${isCurrent ? ' · 当前处理' : ''}${isBest ? ' · 最优区间' : ''}`)
       bar
         .append('rect')
         .attr('x', x)
@@ -212,14 +281,14 @@ const MaxSubarrayVisualizer = () => {
       const info = g
         .append('text')
         .attr('x', 0)
-        .attr('y', -18)
+        .attr('y', -48)
         .attr('text-anchor', 'start')
         .attr('font-size', '12px')
         .attr('font-weight', '500')
         .attr('fill', '#172236')
-      info.text(`currentSum = ${step.variables.currentSum}   /   maxSum = ${step.variables.maxSum}`)
+      info.text(`当前累计 ${step.variables.currentSum}   ·   历史最大 ${step.variables.maxSum}`)
     }
-  }, [nums, steps, currentStep])
+  }, [nums, steps, currentStep, chartRevision])
 
   return (
     <div className={`visualizer-container ${isCodeOpen ? 'code-open' : 'code-closed'}`}>
@@ -268,36 +337,55 @@ const MaxSubarrayVisualizer = () => {
               <span><small>最大和</small><b className="summary-best">{currentStep?.variables.maxSum ?? '—'}</b></span>
               <span><small>最佳区间</small><b className="summary-range">{currentStep && currentStep.phase !== 'init' ? `[${currentStep.bestStart}, ${currentStep.bestEnd}]` : '—'}</b></span>
             </div>
-            <button
-              className="code-toggle"
-              onClick={() => setIsCodeOpen((open) => !open)}
-              aria-expanded={isCodeOpen}
-              aria-label={isCodeOpen ? '收起代码面板' : '展开代码面板'}
-              title={isCodeOpen ? '收起代码' : '展开代码'}
-            >
-              {isCodeOpen ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}
-              <span>{isCodeOpen ? '收起代码' : '显示代码'}</span>
-            </button>
+          </div>
+          <div className={`learning-strip ${decision?.updatedMax ? 'record-frame' : ''}`} aria-live="polite">
+            <div className="learning-step">
+              <span className="learning-label">正在处理</span>
+              <strong>{decision?.restartCandidate === null || decision?.restartCandidate === undefined ? '准备遍历数组' : `nums[${currentStep?.index}] = ${decision.restartCandidate}`}</strong>
+              {decision?.choice !== 'none' && <span className="running-prefix">当前候选区间 [{decision?.candidateStart}, {decision?.candidateEnd}]</span>}
+            </div>
+            <div className="candidate-comparison">
+              <span className={decision?.choice === 'extend' ? 'candidate chosen' : 'candidate'}>
+                <small>接上前缀</small><b>{decision?.previousSum === null ? '无前缀' : decision?.extendCandidate ?? '—'}</b>
+              </span>
+              <span className="compare-sign">或</span>
+              <span className={decision?.choice === 'restart' ? 'candidate chosen' : 'candidate'}>
+                <small>从当前开始</small><b>{decision?.restartCandidate ?? '—'}</b>
+              </span>
+            </div>
+            <div className="decision-explanation">
+              <span className={`decision-mark ${decision?.choice ?? 'none'}`}>{decision?.choice === 'restart' ? '↳' : decision?.choice === 'extend' ? '+' : '·'}</span>
+              <div><strong>{choiceText}</strong><small>{choiceReason}</small></div>
+            </div>
+            <div className={`best-change ${decision?.updatedMax ? 'changed' : ''}`}>
+              <span>最佳和</span>
+              <strong>{decision?.previousMax ?? '—'} <i>→</i> {decision?.nextMax ?? '—'}</strong>
+              {decision?.updatedMax && <small>新纪录 · 区间 [{currentStep?.bestStart}, {currentStep?.bestEnd}]</small>}
+            </div>
           </div>
           <svg ref={svgRef} className="visualization-svg" role="img" aria-label="输入数组的正负柱状图"></svg>
           <div className="chart-legend" aria-label="图表图例">
-            <span><i className="legend-swatch swatch-positive" />正数</span>
-            <span><i className="legend-swatch swatch-negative" />负数</span>
-            <span><i className="legend-swatch swatch-current" />当前元素</span>
-            <span><i className="legend-swatch swatch-active" />当前子数组</span>
-            <span><i className="legend-swatch swatch-best" />最佳子数组</span>
+            <span><i className="legend-swatch swatch-positive" />正值柱</span>
+            <span><i className="legend-swatch swatch-negative" />负值柱</span>
+            <span><i className="legend-swatch swatch-current" />当前游标</span>
+            <span><i className="legend-swatch swatch-active" />候选范围</span>
+            <span><i className="legend-swatch swatch-best" />全局最佳</span>
           </div>
         </section>
+        {!isCodeOpen && (
+          <button className="code-rail" onClick={() => setIsCodeOpen(true)} aria-label="展开代码面板">
+            <PanelRightOpen size={16} /><span>代码</span>
+          </button>
+        )}
         <aside className={`code-drawer ${isCodeOpen ? 'open' : ''}`} aria-label="代码执行面板" aria-hidden={!isCodeOpen}>
           {isCodeOpen && (
-            <>
-            <button className="drawer-close" onClick={() => setIsCodeOpen(false)} aria-label="收起代码面板">收起代码</button>
             <CodePanel
               currentStep={currentStep}
               currentStepIndex={currentStepIndex}
               totalSteps={steps.length}
+              isOpen={isCodeOpen}
+              onToggle={() => setIsCodeOpen(false)}
             />
-            </>
           )}
         </aside>
       </main>

@@ -40,11 +40,33 @@ export interface VariableState {
 /**
  * 动画步骤
  */
+export type SubarrayChoice = 'extend' | 'restart' | 'none'
+
+export interface DecisionSnapshot {
+  /** 处理当前元素前，以前一个元素结尾的最大和 */
+  previousSum: number | null
+  /** 当前元素的独立候选 */
+  restartCandidate: number | null
+  /** 把当前元素接在已有前缀后的候选 */
+  extendCandidate: number | null
+  /** 当前元素最终采用的候选 */
+  chosenCandidate: number | null
+  choice: SubarrayChoice
+  previousMax: number | null
+  nextMax: number | null
+  updatedMax: boolean
+  /** 当前候选子数组的范围（含端点） */
+  candidateStart: number | null
+  candidateEnd: number | null
+}
+
 export interface AlgorithmStep {
   /** 当前处理的元素下标（-1 表示尚未开始） */
   index: number
   /** 当前阶段的变量快照 */
   variables: VariableState
+  /** 当前步骤算法决策的数值快照 */
+  decision: DecisionSnapshot
   /** 当前子数组的起点 */
   currentStart: number
   /** 最佳子数组范围 */

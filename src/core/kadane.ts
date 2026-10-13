@@ -1,4 +1,4 @@
-import type { AlgorithmStep, CodePhase, Language } from '../types'
+import type { AlgorithmStep, CodePhase, DecisionSnapshot, Language } from '../types'
 
 /**
  * 各语言的核心实现代码。
@@ -108,18 +108,31 @@ export function generateSteps(nums: number[]): AlgorithmStep[] {
   let currentStart = 0
   let bestStart = 0
   let bestEnd = 0
+  let decision: DecisionSnapshot = {
+    previousSum: null,
+    restartCandidate: null,
+    extendCandidate: null,
+    chosenCandidate: null,
+    choice: 'none',
+    previousMax: null,
+    nextMax: maxSum,
+    updatedMax: false,
+    candidateStart: null,
+    candidateEnd: null,
+  }
 
   const push = (
     index: number,
     phase: CodePhase,
     description: string,
-    opts: { updatedMax?: boolean; didReset?: boolean } = {},
+    opts: { updatedMax?: boolean; didReset?: boolean; decision?: DecisionSnapshot } = {},
   ) => {
     steps.push({
       index,
       phase,
       description,
       variables: { currentSum, maxSum, num: index >= 0 && index < nums.length ? nums[index] : 0, currentStart, bestStart, bestEnd },
+      decision: opts.decision ?? decision,
       currentStart,
       bestStart,
       bestEnd,
@@ -129,35 +142,70 @@ export function generateSteps(nums: number[]): AlgorithmStep[] {
     })
   }
 
+  decision = { ...decision, nextMax: maxSum, candidateStart: 0, candidateEnd: 0 }
   push(-1, 'init', '初始化：currentSum = 0，maxSum = nums[0] = ' + nums[0])
 
   for (let i = 0; i < nums.length; i++) {
     const num = nums[i]
-    push(i, 'read', `位置 ${i}：读取元素 nums[${i}] = ${num}`)
+    const previousSum = i === 0 ? null : currentSum
+    const previousMax = maxSum
+    const extendCandidate = previousSum === null ? null : previousSum + num
+    const restartCandidate = num
+    const choice = previousSum === null || restartCandidate > (extendCandidate as number) ? 'restart' : 'extend'
+    const candidateStart = choice === 'restart' ? i : currentStart
+    const chosenCandidate = choice === 'restart' ? restartCandidate : (extendCandidate as number)
+    const choiceDecision: DecisionSnapshot = {
+      previousSum,
+      restartCandidate,
+      extendCandidate,
+      chosenCandidate,
+      choice,
+      previousMax,
+      nextMax: previousMax,
+      updatedMax: false,
+      candidateStart,
+      candidateEnd: i,
+    }
+    decision = choiceDecision
+    push(i, 'read', `位置 ${i}：读取 nums[${i}] = ${num}。比较从这里开始 ${restartCandidate} 与接上前缀 ${extendCandidate === null ? '（无前缀）' : extendCandidate}。`)
 
-    if (currentSum < 0) {
-      push(i, 'reset-check', `位置 ${i}：currentSum = ${currentSum} < 0，累积是负担，决定抛弃`)
+    if (previousSum !== null && previousSum < 0) {
+      push(i, 'reset-check', `前缀和 ${previousSum} < 0：它会拖低后续结果，比较后选择从当前元素重启。`, { decision: choiceDecision })
       currentSum = 0
       currentStart = i
-      push(i, 'reset', `位置 ${i}：currentSum 重置为 0，子数组从位置 ${i} 重新开始`, { didReset: true })
+      push(i, 'reset', `丢弃负前缀，从 nums[${i}] = ${num} 重新开始。`, { didReset: true, decision: choiceDecision })
     } else {
-      push(i, 'reset-check', `位置 ${i}：currentSum = ${currentSum} ≥ 0，继续累积`)
+      const explanation = previousSum === null
+        ? `位置 ${i} 是起点，没有可接续的前缀；候选只有 ${num}。`
+        : choice === 'restart'
+          ? `重启候选 ${restartCandidate} ≥ 接续候选 ${extendCandidate}，从当前位置开始更优（相等时采用重启）。`
+          : `接续候选 ${extendCandidate} > 重启候选 ${restartCandidate}，保留正前缀。`
+      push(i, 'reset-check', explanation, { decision: choiceDecision })
+      if (choice === 'restart') currentStart = i
     }
 
-    currentSum += num
-    push(i, 'accumulate', `位置 ${i}：currentSum = ${currentSum - num} + ${num} = ${currentSum}`)
+    currentSum = chosenCandidate
+    push(i, 'accumulate', `${choice === 'restart' ? '重启' : '接续'}：${choice === 'restart' || previousSum === null ? `${num}` : `${previousSum} + ${num}`} = ${currentSum}。`, { decision: choiceDecision })
 
-    if (currentSum > maxSum) {
+    const updatedMax = currentSum > maxSum
+    if (updatedMax) {
       maxSum = currentSum
       bestStart = currentStart
       bestEnd = i
-      push(i, 'max-update', `🎉 位置 ${i}：发现新最大和 ${maxSum}，最佳子数组变为 [${bestStart}, ${bestEnd}]`, { updatedMax: true })
+    }
+    decision = {
+      ...choiceDecision,
+      nextMax: maxSum,
+      updatedMax,
+    }
+    if (updatedMax) {
+      push(i, 'max-update', `新最大值：${previousMax} → ${maxSum}，最佳区间更新为 [${bestStart}, ${bestEnd}]。`, { updatedMax: true, decision })
     } else {
-      push(i, 'max-update', `位置 ${i}：currentSum = ${currentSum} ≤ maxSum = ${maxSum}，保持不变`)
+      push(i, 'max-update', `当前和 ${currentSum} 没有超过历史最大值 ${maxSum}，最佳区间保持 [${bestStart}, ${bestEnd}]。`, { decision })
     }
   }
 
-  push(nums.length, 'return', `✅ 完成！最大子数组和为 ${maxSum}，子数组为 [${nums.slice(bestStart, bestEnd + 1).join(', ')}]`)
+  push(nums.length, 'return', `完成：最大子数组和为 ${maxSum}，子数组为 [${nums.slice(bestStart, bestEnd + 1).join(', ')}]。`)
   return steps
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import type { AlgorithmStep, Language } from '../types'
 import { CODE_BY_LANGUAGE, highlightCode } from '../core/kadane'
 import './CodePanel.css'
@@ -7,6 +8,8 @@ interface CodePanelProps {
   currentStep: AlgorithmStep | null
   currentStepIndex: number
   totalSteps: number
+  isOpen: boolean
+  onToggle: () => void
 }
 
 const LANGUAGES: { key: Language; label: string }[] = [
@@ -22,7 +25,7 @@ const LANGUAGES: { key: Language; label: string }[] = [
  * - 显示 currentSum / maxSum / num 等局部变量的实时值
  * - 支持多语言切换
  */
-const CodePanel = ({ currentStep, currentStepIndex, totalSteps }: CodePanelProps) => {
+const CodePanel = ({ currentStep, currentStepIndex, totalSteps, isOpen, onToggle }: CodePanelProps) => {
   const [language, setLanguage] = useState<Language>('javascript')
   const code = CODE_BY_LANGUAGE[language]
   const codeLines = code.split('\n')
@@ -52,7 +55,8 @@ const CodePanel = ({ currentStep, currentStepIndex, totalSteps }: CodePanelProps
   return (
     <div className="code-panel">
       <div className="code-panel-header">
-        <span className="code-panel-title">🧠 代码联动</span>
+        <span className="code-panel-title">🧠 代码执行</span>
+        <div className="code-panel-actions">
         <div className="lang-tabs">
           {LANGUAGES.map(({ key, label }) => (
             <button
@@ -63,6 +67,16 @@ const CodePanel = ({ currentStep, currentStepIndex, totalSteps }: CodePanelProps
               {label}
             </button>
           ))}
+        </div>
+          <button
+            className="code-panel-toggle"
+            onClick={onToggle}
+            aria-expanded={isOpen}
+            aria-label={isOpen ? '收起代码面板' : '展开代码面板'}
+            title={isOpen ? '收起代码' : '展开代码'}
+          >
+            {isOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+          </button>
         </div>
       </div>
 
